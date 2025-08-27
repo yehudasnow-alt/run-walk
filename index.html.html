@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טיימר ריצה-הליכה</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4da3ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="טיימר ריצה">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4da3ff;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(77, 163, 255, 0.3);
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .week-selector {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #b0b0b0;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+            font-size: 16px;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        select:focus {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.3);
+        }
+        
+        option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+        
+        .start-btn {
+            background: #4da3ff;
+            color: white;
+        }
+        
+        .start-btn:hover {
+            background: #3d8ecc;
+            transform: translateY(-2px);
+        }
+        
+        .pause-btn {
+            background: #ffa94d;
+            color: white;
+        }
+        
+        .pause-btn:hover {
+            background: #e6955a;
+            transform: translateY(-2px);
+        }
+        
+        .reset-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            background: #e55555;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .current-phase {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 300;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        
+        .segment-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .segment-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4da3ff, #8fe388);
+            border-radius: 4px;
+            transition: width 1s linear;
+            box-shadow: 0 0 10px rgba(77, 163, 255, 0.5);
+        }
+        
+        .progress-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .progress-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 5px;
+        }
+        
+        .progress-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+        
+        .timeline {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .timeline-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #b0b0b0;
+        }
+        
+        .timeline-container {
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .timeline-bar {
+            display: flex;
+            min-width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .timeline-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .timeline-segment:first-child {
+            border-left: none;
+        }
+        
+        .timeline-segment.active {
+            outline: 3px solid #fff;
+            outline-offset: -3px;
+            animation: pulse 1.5s infinite;
+            transform: scale(1.05);
+            z-index: 2;
+        }
+        
+        .timeline-segment.completed {
+            position: relative;
+        }
+        
+        .timeline-segment.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #4da3ff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #4da3ff;
+            box-shadow: 0 0 10px rgba(77, 163, 255, 0.5);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .completion-message {
+            background: linear-gradient(135deg, #4da3ff, #8fe388);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .pwa-install {
+            background: rgba(77, 163, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(77, 163, 255, 0.3);
+            display: none;
+        }
+        
+        .install-btn {
+            background: #4da3ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .timer-display {
+                font-size: 2.5rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .progress-info {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .timeline-segment {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏃‍♂️ טיימר ריצה-הליכה</h1>
+        
+        <!-- PWA Installation prompt -->
+        <div class="pwa-install" id="pwa-install">
+            <div>📱 ניתן להתקין את האפליקציה במסך הבית לחוויה מושלמת!</div>
+            <button class="install-btn" id="install-btn">התקן אפליקציה</button>
+        </div>
+        
+        <div class="controls">
+            <div class="week-selector">
+                <label for="week-select">בחר שבוע אימון:</label>
+                <select id="week-select">
+                    <option value="1">שבוע 1</option>
+                    <option value="2">שבוע 2</option>
+                    <option value="3">שבוע 3</option>
+                    <option value="4">שבוע 4</option>
+                    <option value="5">שבוע 5</option>
+                    <option value="6">שבוע 6</option>
+                    <option value="7">שבוע 7</option>
+                    <option value="8">שבוע 8</option>
+                    <option value="9">שבוע 9</option>
+                    <option value="10">שבוע 10</option>
+                    <option value="11">שבוע 11</option>
+                    <option value="12">שבוע 12</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button class="start-btn" id="start-btn">התחל</button>
+                <button class="pause-btn" id="pause-btn">השהה</button>
+                <button class="reset-btn" id="reset-btn">איפוס</button>
+            </div>
+        </div>
+        
+        <div class="status">
+            <div class="current-phase" id="current-phase">בחר שבוע והתחל</div>
+            <div class="timer-display" id="timer-display">00:00</div>
+            
+            <!-- פס התקדמות הסגמנט הנוכחי -->
+            <div class="segment-progress">
+                <div class="segment-progress-bar" id="segment-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="progress-info">
+                <div class="progress-card">
+                    <div class="progress-label">עבר</div>
+                    <div class="progress-value" id="elapsed-time">00:00</div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-label">נותר</div>
+                    <div class="progress-value" id="remaining-time">00:00</div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-label">סה״כ</div>
+                    <div class="progress-value" id="total-time">00:00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline">
+            <div class="timeline-title">מסלול האימון</div>
+            <div class="timeline-container">
+                <div class="timeline-bar" id="timeline-bar">
+                    <!-- Timeline segments will be generated here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="completion-message" id="completion-message">
+            🎉 כל הכבוד! סיימת את האימון!
+        </div>
+    </div>
+
+    <script>
+        // נתוני השבועות
+        const WEEKS_PLAN = {
+            1: [['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 1, '#4da3ff'], ['Walk', 2, '#8fe388']],
+            2: [['Run', 2, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 2, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 2, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 2, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 2, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 2, '#4da3ff'], ['Walk', 2, '#8fe388']],
+            3: [['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388']],
+            4: [['Run', 4, '#4da3ff'], ['Walk', 1, '#8fe388'], ['Run', 4, '#4da3ff'], ['Walk', 1, '#8fe388'], ['Run', 4, '#4da3ff'], ['Walk', 1, '#8fe388'], ['Run', 4, '#4da3ff'], ['Walk', 1, '#8fe388'], ['Run', 4, '#4da3ff'], ['Walk', 1, '#8fe388'], ['Run', 4, '#4da3ff'], ['Walk', 1, '#8fe388']],
+            5: [['Run', 20, '#4da3ff']],
+            6: [['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 3, '#4da3ff'], ['Walk', 2, '#8fe388'], ['Run', 20, '#4da3ff']],
+            7: [['Run', 25, '#4da3ff']],
+            8: [['Run', 30, '#4da3ff']],
+            9: [['Run', 25, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388'], ['Run', 25, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388'], ['Run', 25, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388']],
+            10: [['Run', 40, '#4da3ff']],
+            11: [['Run', 30, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388'], ['Run', 30, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388'], ['Run', 30, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388'], ['Run', 30, '#4da3ff'], ['Fast', 2, '#ffa94d'], ['Walk', 2, '#8fe388']],
+            12: [['Run', 50, '#4da3ff']]
+        };
+        
+        // משתנים גלובליים
+        let currentSchedule = [];
+        let currentIndex = 0;
+        let remainingSeconds = 0;
+        let segmentTotalSeconds = 0;
+        let elapsedTotalSeconds = 0;
+        let totalWorkoutSeconds = 0;
+        let timerInterval = null;
+        let isRunning = false;
+        let audioContext = null;
+        let wakeLock = null;
+        let deferredPrompt = null;
+        
+        // אלמנטים DOM
+        const weekSelect = document.getElementById('week-select');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const currentPhase = document.getElementById('current-phase');
+        const timerDisplay = document.getElementById('timer-display');
+        const segmentProgressBar = document.getElementById('segment-progress-bar');
+        const elapsedTime = document.getElementById('elapsed-time');
+        const remainingTime = document.getElementById('remaining-time');
+        const totalTime = document.getElementById('total-time');
+        const timelineBar = document.getElementById('timeline-bar');
+        const completionMessage = document.getElementById('completion-message');
+        const pwaInstall = document.getElementById('pwa-install');
+        const installBtn = document.getElementById('install-btn');
+        
+        // בניית לוח זמנים לשבוע
+        function buildSchedule(weekNumber) {
+            const weekPlan = WEEKS_PLAN[weekNumber];
+            if (!weekPlan) return [];
+            
+            const schedule = [];
+            weekPlan.forEach(([label, minutes, color]) => {
+                schedule.push({
+                    label: label,
+                    minutes: minutes,
+                    seconds: minutes * 60,
+                    color: color
+                });
+            });
+            return schedule;
+        }
+        
+        // חישוב סך זמן האימון
+        function calculateTotalTime(schedule) {
+            return schedule.reduce((total, segment) => total + segment.seconds, 0);
+        }
+        
+        // עיצוב הציר הזמן
+        function renderTimeline() {
+            if (currentSchedule.length === 0) return;
+            
+            timelineBar.innerHTML = '';
+            const total = calculateTotalTime(currentSchedule);
+            
+            currentSchedule.forEach((segment, index) => {
+                const segmentElement = document.createElement('div');
+                segmentElement.className = 'timeline-segment';
+                segmentElement.style.backgroundColor = segment.color;
+                segmentElement.style.width = `${(segment.seconds / total) * 100}%`;
+                segmentElement.textContent = `${segment.label} ${segment.minutes}ד׳`;
+                segmentElement.id = `segment-${index}`;
+                timelineBar.appendChild(segmentElement);
+            });
+        }
+        
+        // עדכון תצוגת הזמן
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // פונקציה להבהרת/החשכת צבע
+        function adjustBrightness(color, factor) {
+            const hex = color.replace('#', '');
+            const r = Math.min(255, Math.floor(parseInt(hex.substr(0, 2), 16) * factor));
+            const g = Math.min(255, Math.floor(parseInt(hex.substr(2, 2), 16) * factor));
+            const b = Math.min(255, Math.floor(parseInt(hex.substr(4, 2), 16) * factor));
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+        
+        // עדכון ממשק המשתמש
+        function updateUI() {
+            if (currentSchedule.length === 0) return;
+            
+            const currentSegment = currentSchedule[currentIndex];
+            if (!currentSegment) return;
+            
+            // עדכון שלב נוכחי וטיימר
+            let phaseText = '';
+            switch (currentSegment.label) {
+                case 'Run':
+                    phaseText = 'ריצה 🏃‍♂️';
+                    break;
+                case 'Walk':
+                    phaseText = 'הליכה 🚶‍♂️';
+                    break;
+                case 'Fast':
+                    phaseText = 'מהיר 💨';
+                    break;
+                default:
+                    phaseText = currentSegment.label;
+            }
+            currentPhase.textContent = phaseText;
+            currentPhase.style.color = currentSegment.color;
+            
+            timerDisplay.textContent = formatTime(remainingSeconds);
+            
+            // עדכון פס התקדמות של הסגמנט הנוכחי
+            const progressPercent = ((segmentTotalSeconds - remainingSeconds) / segmentTotalSeconds) * 100;
+            segmentProgressBar.style.width = `${Math.max(0, Math.min(100, progressPercent))}%`;
+            
+            // עדכון צבע פס התקדמות לפי הסגמנט
+            segmentProgressBar.style.background = `linear-gradient(90deg, ${currentSegment.color}, ${adjustBrightness(currentSegment.color, 1.2)})`;
+            
+            // עדכון זמנים
+            elapsedTime.textContent = formatTime(elapsedTotalSeconds);
+            const totalRemaining = totalWorkoutSeconds - elapsedTotalSeconds;
+            remainingTime.textContent = formatTime(totalRemaining);
+            totalTime.textContent = formatTime(totalWorkoutSeconds);
+            
+            // הדגשת הסגמנט הפעיל וסימון השלבים שהושלמו
+            document.querySelectorAll('.timeline-segment').forEach((segment, index) => {
+                if (index < currentIndex) {
+                    segment.classList.add('completed');
+                    segment.classList.remove('active');
+                } else if (index === currentIndex) {
+                    segment.classList.add('active');
+                    segment.classList.remove('completed');
+                } else {
+                    segment.classList.remove('active', 'completed');
+                }
+            });
+        }
+        
+        // הפעלת צליל ביפ ורטט
+        function beep() {
+            // צליל
+            if (audioContext) {
+                try {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+                    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } catch (error) {
+                    console.log('שגיאה בהשמעת צליל:', error);
+                }
+            }
+            
+            // רטט
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+        
+        // נעילת המסך כדי למנוע כיבוי
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator && location.protocol === 'https:') {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock מופעל');
+                }
+            } catch (error) {
+                // שגיאה רגילה - לא משפיעה על הפונקציונליות
+                console.log('Wake Lock לא זמין (נורמלי בקבצים מקומיים)');
+            }
+        }
+        
+        // שחרור נעילת המסך
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                console.log('Wake Lock משוחרר');
+            }
+        }
+        
+        // פונקציית הטיק של הטיימר
+        function tick() {
+            if (!isRunning || currentSchedule.length === 0) return;
+            
+            remainingSeconds--;
+            elapsedTotalSeconds++;
+            
+            updateUI();
+            
+            // בדיקה אם הסגמנט הנוכחי הסתיים
+            if (remainingSeconds <= 0) {
+                // מעבר לסגמנט הבא
+                currentIndex++;
+                
+                if (currentIndex >= currentSchedule.length) {
+                    // האימון הסתיים
+                    stop();
+                    showCompletion();
+                } else {
+                    // התחלת הסגמנט הבא
+                    remainingSeconds = currentSchedule[currentIndex].seconds;
+                    segmentTotalSeconds = remainingSeconds;
+                    beep();
+                    updateUI();
+                }
+            }
+        }
+        
+        // התחלת הטיימר
+        async function start() {
+            const selectedWeek = parseInt(weekSelect.value);
+            
+            // בניית לוח זמנים אם עדיין לא נבנה
+            if (currentSchedule.length === 0) {
+                currentSchedule = buildSchedule(selectedWeek);
+                totalWorkoutSeconds = calculateTotalTime(currentSchedule);
+                currentIndex = 0;
+                remainingSeconds = currentSchedule[0].seconds;
+                segmentTotalSeconds = remainingSeconds;
+                elapsedTotalSeconds = 0;
+                renderTimeline();
+            }
+            
+            // יצירת AudioContext רק אחרי אינטראקציית משתמש
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (error) {
+                    console.log('לא ניתן ליצור AudioContext:', error);
+                }
+            }
+            
+            // בקשת Wake Lock כדי לשמור על המסך דלוק
+            await requestWakeLock();
+            
+            isRunning = true;
+            timerInterval = setInterval(tick, 1000);
+            
+            startBtn.textContent = 'רץ...';
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            weekSelect.disabled = true;
+            
+            completionMessage.style.display = 'none';
+            updateUI();
+        }
+        
+        // השהיית הטיימר
+        function pause() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            releaseWakeLock();
+            
+            startBtn.textContent = 'המשך';
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+        
+        // איפוס הטיימר
+        function reset() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            releaseWakeLock();
+            
+            currentSchedule = [];
+            currentIndex = 0;
+            remainingSeconds = 0;
+            segmentTotalSeconds = 0;
+            elapsedTotalSeconds = 0;
+            totalWorkoutSeconds = 0;
+            
+            startBtn.textContent = 'התחל';
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            weekSelect.disabled = false;
+            
+            currentPhase.textContent = 'בחר שבוע והתחל';
+            currentPhase.style.color = '#e0e0e0';
+            timerDisplay.textContent = '00:00';
+            segmentProgressBar.style.width = '0%';
+            elapsedTime.textContent = '00:00';
+            remainingTime.textContent = '00:00';
+            totalTime.textContent = '00:00';
+            
+            timelineBar.innerHTML = '';
+            completionMessage.style.display = 'none';
+        }
+        
+        // עצירה בסיום האימון
+        function stop() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            releaseWakeLock();
+            
+            startBtn.disabled = true;
+            pauseBtn.disabled = true;
+            weekSelect.disabled = false;
+        }
+        
+        // הצגת הודעת סיום
+        function showCompletion() {
+            completionMessage.style.display = 'block';
+            currentPhase.textContent = 'האימון הושלם! 🎉';
+            currentPhase.style.color = '#4da3ff';
+        }
+        
+        // PWA Installation
+        function showPWAPrompt() {
+            if (deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+                pwaInstall.style.display = 'block';
+            }
+        }
+        
+        // מאזיני אירועים
+        startBtn.addEventListener('click', start);
+        pauseBtn.addEventListener('click', pause);
+        resetBtn.addEventListener('click', reset);
+        
+        // שינוי בבחירת השבוע
+        weekSelect.addEventListener('change', () => {
+            reset();
+            const selectedWeek = parseInt(weekSelect.value);
+            const schedule = buildSchedule(selectedWeek);
+            const total = calculateTotalTime(schedule);
+            totalTime.textContent = formatTime(total);
+        });
+        
+        // טיפול בשינוי visibility של העמוד
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isRunning) {
+                console.log('העמוד הוסתר - הטיימר ממשיך לרוץ ברקע');
+            } else if (!document.hidden && isRunning) {
+                console.log('העמוד חזר לפוקוס');
+                updateUI();
+            }
+        });
+        
+        // PWA Events
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showPWAPrompt();
+        });
+        
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    pwaInstall.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+        
+        // בדיקה אם האפליקציה כבר מותקנת
+        window.addEventListener('appinstalled', () => {
+            pwaInstall.style.display = 'none';
+            console.log('האפליקציה הותקנה בהצלחה!');
+        });
+        
+        // אתחול האפליקציה
+        function init() {
+            pauseBtn.disabled = true;
+            
+            // חישוב זמן כולל לשבוע הראשון
+            const schedule = buildSchedule(1);
+            const total = calculateTotalTime(schedule);
+            totalTime.textContent = formatTime(total);
+            
+            // בדיקה אם צריך להציג הודעת PWA
+            setTimeout(showPWAPrompt, 2000);
+        }
+        
+        // טעינת האפליקציה
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Service Worker - רק אם האפליקציה מוגשת דרך שרת
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'run-timer-v1';
+                    
+                    self.addEventListener('install', event => {
+                        console.log('Service Worker installed');
+                        self.skipWaiting();
+                    });
+                    
+                    self.addEventListener('activate', event => {
+                        console.log('Service Worker activated');
+                        event.waitUntil(self.clients.claim());
+                    });
+                    
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            caches.match(event.request).then(response => {
+                                return response || fetch(event.request);
+                            })
+                        );
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('Service Worker registered successfully');
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        } else {
+            console.log('Service Worker לא זמין (נורמלי בקבצים מקומיים)');
+        }
+    </script>
+</body>
+</html>
