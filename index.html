@@ -391,6 +391,11 @@
     <div class="container">
         <h1>🏃‍♂️ טיימר ריצה-הליכה</h1>
         
+        <!-- אלמנט אודיו נסתר לiOS -->
+        <audio id="background-audio" loop preload="auto" style="display: none;">
+            <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAAABAAAJKEAACBhAAACAAgAZGF0YQAAAAA=" type="audio/wav">
+        </audio>
+        
         <!-- PWA Installation prompt -->
         <div class="pwa-install" id="pwa-install">
             <div>📱 ניתן להתקין את האפליקציה במסך הבית לחוויה מושלמת!</div>
@@ -500,6 +505,7 @@
         const completionMessage = document.getElementById('completion-message');
         const pwaInstall = document.getElementById('pwa-install');
         const installBtn = document.getElementById('install-btn');
+        const backgroundAudio = document.getElementById('background-audio');
         
         // בניית לוח זמנים לשבוע
         function buildSchedule(weekNumber) {
@@ -635,12 +641,12 @@
             });
         }
         
-        // הפעלת צליל ביפ ארוך ורטט - עובד גם במסך נעול
+        // הפעלת צליל ביפ ארוך ורטט - מותאם לiOS עם background audio
         function beep() {
-            // צליל ביפ ארוך (שנייה וחצי) - עובד גם במסך נעול
+            // צליל ביפ דרך WebAudio API
             if (audioContext && audioContext.state === 'running') {
                 try {
-                    // יצירת מספר ביפים לוודא שהצליל נשמע גם במסך נעול
+                    // יצירת מספר ביפים לוודא שהצליל נשמע
                     for (let i = 0; i < 3; i++) {
                         const delay = i * 0.5;
                         const oscillator = audioContext.createOscillator();
@@ -666,19 +672,26 @@
                 }
             }
             
-            // רטט ארוך יותר - מותאם ל-iPhone ועובד גם במסך נעול
+            // רטט ארוך יותר - מותאם ל-iPhone
             if (navigator.vibrate) {
                 // דפוס רטט חזק: רטט ארוך עם חזרות
                 navigator.vibrate([500, 200, 500, 200, 500]);
             }
             
-            // גיבוי - השמעת צליל דרך Audio API גם כן
+            // גיבוי נוסף - ניגון קצר של האודיו הנסתר כדי להפעיל את הביפ
             try {
-                const audio = new Audio();
-                audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBzaI0fPakzELFWm+8+GbSwkJQaTb8bJhFgU0fc/z1YA0CaHRx8bIZywIEJy9s4MfEAhAtYKdTEUIUqbm8LFmHQc8hdb3zXkpBSN8x/DeBjoKFlm26+mmViAYN5LS5cuGOQkZYrHx5J9REAxUpeDxtmQcByaM1fDGvzEKGWe48+KcSAkKPaLf8bNgGAUzecnz14E1CaGcBz3RH8LXfHYK8O8jJVd1qJf5LJ8cT';
-                audio.play().catch(() => {}); // ignore errors
+                if (backgroundAudio && !backgroundAudio.paused) {
+                    // שינוי זמני של עוצמת הקול לביפ
+                    const originalVolume = backgroundAudio.volume;
+                    backgroundAudio.volume = 0.1;
+                    
+                    // חזרה לעוצמה המקורית אחרי הביפ
+                    setTimeout(() => {
+                        backgroundAudio.volume = originalVolume;
+                    }, 1500);
+                }
             } catch (error) {
-                // ignore
+                console.log('שגיאה בגיבוי אודיו:', error);
             }
         }
         
